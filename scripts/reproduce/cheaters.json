@@ -1,0 +1,96 @@
+{
+ "_doc": "Cheaters (the paced pretraining and the paced RL cheater only). Each entry: mode (zero = zero-weight cheater; real = real weights), prompts (verifier session length), env (extra prover environment), expect (the reference result, with its run and box), spec (cheater spec passed to the verifier). Entries ending in _loop pace themselves: they work while their own noise average is above VARENA_PACE_TARGET_GBS (export it, for example the floor plus 0.03) and rest when it is not. idle_control_native is the control: a cheater with no hidden workload, which must pass.",
+ "idle_control_native": {
+  "mode": "zero",
+  "prompts": 300,
+  "expect": "Idle control with the head read from the native streamer (native_head): must pass like idle_control.",
+  "spec": {
+   "keep_w": true,
+   "keep_k": true,
+   "native_head": true
+  }
+ },
+ "max_shard_fitnh_loop_A_l05": {
+  "mode": "zero",
+  "prompts": 450,
+  "env": "VARENA_WL_WARM=1 CUBLAS_WORKSPACE_CONFIG=:16:8 VARENA_FUSED_NORM=1 VARENA_MB_TIMER=1 VARENA_WL_TRACE=1 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2",
+  "workload": "pretrain",
+  "expect": "Box W follow-up (15-16 Nov): max_shard_fitnh_loop with link_gbs 0.5 and 2 host threads: never rests; 16.1x on Box W under sloth, not caught. All-butterfly (16 Nov): 14.1x on Box W at 900 prompts and 22.1x on Box X at 450 prompts, not caught.",
+  "spec": {
+   "keep_w": true,
+   "keep_k": true,
+   "dev_gate": true,
+   "workload": "max_shard",
+   "wl_spec": {
+    "stash": "host",
+    "ffns": "auto",
+    "seq": 2048,
+    "global_tokens": 1048576,
+    "mlp_blocks": 16,
+    "head_groups": 8,
+    "out_gbs": 0,
+    "burst_s": 0,
+    "link_gbs": 0.5,
+    "margin_mib": 256,
+    "max_pending_mib": 32,
+    "seq_floor": 2048,
+    "tchunk": 0,
+    "pace_loop": true
+   },
+   "native_head": true
+  }
+ },
+ "local_rl_a16_g2_smooth_loop_nh": {
+  "mode": "real",
+  "prompts": 500,
+  "env": "VARENA_WL_WARM=1 CUBLAS_WORKSPACE_CONFIG=:16:8 VARENA_FUSED_NORM=1",
+  "workload": "rl",
+  "expect": "Careful RL with closed-loop pacing: works while its own credited noise average is above VARENA_PACE_TARGET_GBS (lib.sh sets it to the floor + 0.03), rests when it is not. Worst case for the scheme: the cheater knows the floor. Short form: the session (500 prompts, about 185 s) fits ONE call of 1 task prompt x 2 rollouts = 2 samples, both in flight (about 100 s expected: a quarter of the 8-sample call measured at about 400 s). The slowdown is that call's samples/s against the bare baseline; with 2 samples it is a coarse figure. A real optimiser step is 16 calls; for measurement the update runs after every call (opt_every_calls 1) and is timed apart, and verdict.py models a whole step as 16 x call + update. Reference measurements with 2 task prompts x 4 rollouts per call: not caught, 55x (Box N, 14 Nov), 62x (Box R, 15 Nov).",
+  "spec": {
+   "real_w": true,
+   "keep_w": true,
+   "keep_k": true,
+   "k_filler": true,
+   "dev_gate": true,
+   "workload": "local_rl",
+   "wl_spec": {
+    "n_prompts": 16,
+    "group": 2,
+    "prompt": 512,
+    "gen": 512,
+    "seg": 8,
+    "train_mb": 1,
+    "host_adam": true,
+    "scratch_mib": 16,
+    "targets": [
+     "q",
+     "k",
+     "v",
+     "o",
+     "gate",
+     "up",
+     "down"
+    ],
+    "rank": 16,
+    "link_gbs": 0.1,
+    "conc_prompts": 1,
+    "shared_prefix": 0,
+    "fit": false,
+    "mlp_chunk": 0,
+    "lm_chunk": 256,
+    "gen_in_flight": 2,
+    "stream_adapters": true,
+    "phase_split": true,
+    "adapter_gbs": 0.4,
+    "mlp_slice": 1024,
+    "reentrant": true,
+    "kv8": false,
+    "arena": true,
+    "no_release": true,
+    "pace_loop": true,
+    "opt_every_calls": 1
+   },
+   "native_head": true
+  }
+ }
+}

@@ -1,0 +1,5 @@
+libcudart.so.13 {
+  global: cudaMemcpyAsync; cudaMemsetAsync; cudaLaunchKernel; __cudaLaunchKernel; cudaLaunchKernelExC; cudaGraphLaunch;
+          cudaEventRecord; cudaEventRecordWithFlags; cudaStreamWaitEvent;
+};
+VSHIM { global: vshim_dump; local: *; };
