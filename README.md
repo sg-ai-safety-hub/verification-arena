@@ -2,7 +2,7 @@
 
 *This readme is human written, everything else is AI-generated and unverified*
 
-VerificationArena is a testbed for software-only Compute Verification approaches. It provides a platform to test and improve verification schemes. The arena is currently initialised with an implementation of Memory Exhaustion and Link Exhaustion.
+VerificationArena is a testbed for software-only Compute Verification approaches. It provides a platform to test and improve verification schemes. The arena is currently initialised with an implementation of **Memory Exhaustion** and **Link Exhaustion**.
 
 ## The Arena: How It Works
 
